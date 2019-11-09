@@ -1,18 +1,29 @@
 version: "3"
 services:
+  telin: 
+    image: petersantoso/telin-registration-server-app
+    ports: 
+      - 80:3000
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:example@db:5432
   adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
   db:
-    image: "postgres:11"
+    image: postgres:alpine
     container_name: "my_postgres"
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_DB: telin
+      POSTGRES_USER: telin
+      POSTGRES_PASSWORD: telin123
     ports:
       - "5432:5432"
     volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - my_dbdata:/var/lib/postgresql/data
 volumes:
   my_dbdata:
