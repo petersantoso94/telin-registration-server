@@ -75,9 +75,12 @@ const login = (req, res) => {
 const getCustomers = (request, response) => {
     let customerID = request.params.customerID;
     let responseHandler = (error, results) => {
-        console.log(results.rows)
         if (error) {
-            throw error
+            response.status(201).json({
+                success: false
+            })
+            console.error(error) 
+            return;
         }
         response.status(200).json(results.rows)
     }
@@ -86,9 +89,12 @@ const getCustomers = (request, response) => {
 const getCustomer = (request, response) => {
     let customerID = request.params.customerID;
     let responseHandler = (error, results) => {
-        console.log(results.rows)
         if (error) {
-            throw error
+            response.status(201).json({
+                success: false
+            })
+            console.error(error) 
+            return;
         }
         response.status(200).json(results.rows)
     }
@@ -109,9 +115,41 @@ const addCustomers = (request, response) => {
 
     pool.query('INSERT INTO customers (name, phone, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [name, phone, nik, nokk, pktp, pkk, status, admin_id], (error,result) => {
         if (error) {
-            throw error
+            response.status(201).json({
+                success: false
+            })
+            console.error(error) 
+            return;
         }
-        console.log(result)
+        response.status(201).json({
+            success: true
+        })
+    })
+}
+
+const updateCustomer = (request, response)=>{
+    let customerID = request.params.customerID;
+    const {
+        status,
+        admin_id
+    } = request.body
+
+    if(!status || !admin_id){
+        response.status(400).json({
+            success: false,
+            message: 'Update failed! Missing params'
+        })
+        return;
+    }
+
+    pool.query('UPDATE customers SET status = $1, admin_id = $2 WHERE id = $3', [ status, admin_id, customerID], (error,result) => {
+        if (error) {
+            response.status(201).json({
+                success: false
+            })
+            console.error(error) 
+            return;
+        }
         response.status(201).json({
             success: true
         })
@@ -121,7 +159,7 @@ app.route('/login').post(login)
 app.use(middleware.checkToken)
 // GET endpoint
 app.route('/customers').get(getCustomers)
-app.route('/customers/:customerID').get(getCustomer)
+app.route('/customer/:customerID').get(getCustomer).put(updateCustomer)
 // POST endpoint
 app.route('/customer').post(addCustomers)
 
