@@ -6,6 +6,7 @@ const {
 } = require('./config')
 const jwt = require('jsonwebtoken');
 const middleware = require('./middleware');
+const crypto = require('crypto')
 
 const app = express()
 
@@ -16,74 +17,113 @@ app.use(bodyParser.urlencoded({
 app.use(cors())
 
 const login = (req, res) => {
-    console.log(req.body)
     let username = req.body.username;
     let password = req.body.password;
-    // For the given username fetch user from DB
-    let mockedUsername = 'admin';
-    let mockedPassword = 'password';
 
-    if (username && password) {
-      if (username === mockedUsername && password === mockedPassword) {
-        let token = jwt.sign({username: username},
-          process.env.JWT_SECRET,
-          { expiresIn: '24h' // expires in 24 hours
-          }
-        );
-        // return the JWT token for the future API calls
-        res.json({
-          success: true,
-          message: 'Authentication successful!',
-          token: token
-        });
-      } else {
-        res.status(403).json({
-          success: false,
-          message: 'Incorrect username or password'
-        });
-      }
-    } else {
-      res.status(400).json({
-        success: false,
-        message: 'Authentication failed! Please check the request'
-      });
+    if(!username || !password){
+        res.status(400).json({
+            success: false,
+            message: 'Authentication failed! Please check the request'
+          });
     }
+    // For the given username fetch user from DB
+    pool.query('SELECT * FROM admins WHERE username = $1',[username])
+    .then((result)=>{
+        if(!result){
+            res.status(403).json({
+                success: false,
+                message: 'Incorrect username or password'
+            });
+        }
+        if(result.rows.length === 0 ){
+            res.status(403).json({
+                success: false,
+                message: 'Incorrect username or password'
+            });
+        }
+        let mockedPassword = result.rows[0].password
+        let mockedUsername = username;
+        password = crypto.createHash('md5').update(password).digest("hex")
+        if (username === mockedUsername && password === mockedPassword) {
+            let token = jwt.sign({username: username},
+              process.env.JWT_SECRET,
+              { expiresIn: '24h' // expires in 24 hours
+              }
+            );
+            // return the JWT token for the future API calls
+            res.json({
+              success: true,
+              message: 'Authentication successful!',
+              token: token
+            });
+          } else {
+            res.status(403).json({
+              success: false,
+              message: 'Incorrect username or password'
+            });
+          }
+    })
+    .catch(e => {
+        console.error(e.stack)
+        res.status(403).json({
+            success: false,
+            message: 'Incorrect username or password'
+        });
+    })
   };
 
-const getBooks = (request, response) => {
-    pool.query('SELECT * FROM books', (error, results) => {
+const getCustomers = (request, response) => {
+    let customerID = request.params.customerID;
+    let responseHandler = (error, results) => {
+        console.log(results.rows)
         if (error) {
             throw error
         }
         response.status(200).json(results.rows)
-    })
+    }
+    pool.query('SELECT * FROM customers', responseHandler)
 }
-
-const addBook = (request, response) => {
-    const {
-        author,
-        title
-    } = request.body
-
-    pool.query('INSERT INTO books (author, title) VALUES ($1, $2)', [author, title], error => {
+const getCustomer = (request, response) => {
+    let customerID = request.params.customerID;
+    let responseHandler = (error, results) => {
+        console.log(results.rows)
         if (error) {
             throw error
         }
+        response.status(200).json(results.rows)
+    }
+    pool.query('SELECT * FROM customers WHERE id = $1',[customerID], responseHandler)
+}
+
+const addCustomers = (request, response) => {
+    const {
+        name,
+        phone,
+        nik,
+        nokk,
+        pktp,
+        pkk,
+        status,
+        admin_id
+    } = request.body
+
+    pool.query('INSERT INTO customers (name, phone, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [name, phone, nik, nokk, pktp, pkk, status, admin_id], (error,result) => {
+        if (error) {
+            throw error
+        }
+        console.log(result)
         response.status(201).json({
-            status: 'success',
-            message: 'Book added.'
+            success: true
         })
     })
 }
 app.route('/login').post(login)
 app.use(middleware.checkToken)
-
-app
-    .route('/books')
-    // GET endpoint
-    .get(getBooks)
-    // POST endpoint
-    .post(addBook)
+// GET endpoint
+app.route('/customers').get(getCustomers)
+app.route('/customers/:customerID').get(getCustomer)
+// POST endpoint
+app.route('/customer').post(addCustomers)
 
 
 
