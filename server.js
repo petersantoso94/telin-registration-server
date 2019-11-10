@@ -44,6 +44,8 @@ const login = (req, res) => {
                 });
                 return;
             }
+            let admin_id = result.rows[0].id
+
             let mockedPassword = result.rows[0].password
             let mockedUsername = username;
             password = crypto.createHash('md5').update(password).digest("hex")
@@ -59,7 +61,11 @@ const login = (req, res) => {
                 res.json({
                     success: true,
                     message: 'Authentication successful!',
-                    token: token
+                    token: token,
+                    admin_details: {
+                        id: admin_id,
+                        username: username
+                    },
                 });
             } else {
                 res.status(403).json({
