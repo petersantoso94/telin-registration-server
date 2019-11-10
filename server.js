@@ -20,57 +20,62 @@ const login = (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
 
-    if(!username || !password){
+    if (!username || !password) {
         res.status(400).json({
             success: false,
             message: 'Authentication failed! Please check the request'
-          });
+        });
+        return;
     }
     // For the given username fetch user from DB
-    pool.query('SELECT * FROM admins WHERE username = $1',[username])
-    .then((result)=>{
-        if(!result){
+    pool.query('SELECT * FROM admins WHERE username = $1', [username])
+        .then((result) => {
+            if (!result) {
+                res.status(403).json({
+                    success: false,
+                    message: 'Incorrect username or password'
+                });
+                return;
+            }
+            if (result.rows.length === 0) {
+                res.status(403).json({
+                    success: false,
+                    message: 'Incorrect username or password'
+                });
+                return;
+            }
+            let mockedPassword = result.rows[0].password
+            let mockedUsername = username;
+            password = crypto.createHash('md5').update(password).digest("hex")
+            if (username === mockedUsername && password === mockedPassword) {
+                let token = jwt.sign({
+                        username: username
+                    },
+                    process.env.JWT_SECRET, {
+                        expiresIn: '24h' // expires in 24 hours
+                    }
+                );
+                // return the JWT token for the future API calls
+                res.json({
+                    success: true,
+                    message: 'Authentication successful!',
+                    token: token
+                });
+            } else {
+                res.status(403).json({
+                    success: false,
+                    message: 'Incorrect username or password'
+                });
+            }
+        })
+        .catch(e => {
+            console.error(e.stack)
             res.status(403).json({
                 success: false,
                 message: 'Incorrect username or password'
             });
-        }
-        if(result.rows.length === 0 ){
-            res.status(403).json({
-                success: false,
-                message: 'Incorrect username or password'
-            });
-        }
-        let mockedPassword = result.rows[0].password
-        let mockedUsername = username;
-        password = crypto.createHash('md5').update(password).digest("hex")
-        if (username === mockedUsername && password === mockedPassword) {
-            let token = jwt.sign({username: username},
-              process.env.JWT_SECRET,
-              { expiresIn: '24h' // expires in 24 hours
-              }
-            );
-            // return the JWT token for the future API calls
-            res.json({
-              success: true,
-              message: 'Authentication successful!',
-              token: token
-            });
-          } else {
-            res.status(403).json({
-              success: false,
-              message: 'Incorrect username or password'
-            });
-          }
-    })
-    .catch(e => {
-        console.error(e.stack)
-        res.status(403).json({
-            success: false,
-            message: 'Incorrect username or password'
-        });
-    })
-  };
+        })
+};
 
 const getCustomers = (request, response) => {
     let customerID = request.params.customerID;
@@ -79,7 +84,7 @@ const getCustomers = (request, response) => {
             response.status(201).json({
                 success: false
             })
-            console.error(error) 
+            console.error(error)
             return;
         }
         response.status(200).json(results.rows)
@@ -93,12 +98,12 @@ const getCustomer = (request, response) => {
             response.status(201).json({
                 success: false
             })
-            console.error(error) 
+            console.error(error)
             return;
         }
         response.status(200).json(results.rows)
     }
-    pool.query('SELECT * FROM customers WHERE id = $1',[customerID], responseHandler)
+    pool.query('SELECT * FROM customers WHERE id = $1', [customerID], responseHandler)
 }
 
 const addCustomers = (request, response) => {
@@ -113,12 +118,12 @@ const addCustomers = (request, response) => {
         admin_id
     } = request.body
 
-    pool.query('INSERT INTO customers (name, phone, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [name, phone, nik, nokk, pktp, pkk, status, admin_id], (error,result) => {
+    pool.query('INSERT INTO customers (name, phone, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [name, phone, nik, nokk, pktp, pkk, status, admin_id], (error, result) => {
         if (error) {
             response.status(201).json({
                 success: false
             })
-            console.error(error) 
+            console.error(error)
             return;
         }
         response.status(201).json({
@@ -127,14 +132,14 @@ const addCustomers = (request, response) => {
     })
 }
 
-const updateCustomer = (request, response)=>{
+const updateCustomer = (request, response) => {
     let customerID = request.params.customerID;
     const {
         status,
         admin_id
     } = request.body
 
-    if(!status || !admin_id){
+    if (!status || !admin_id) {
         response.status(400).json({
             success: false,
             message: 'Update failed! Missing params'
@@ -142,12 +147,12 @@ const updateCustomer = (request, response)=>{
         return;
     }
 
-    pool.query('UPDATE customers SET status = $1, admin_id = $2 WHERE id = $3', [ status, admin_id, customerID], (error,result) => {
+    pool.query('UPDATE customers SET status = $1, admin_id = $2 WHERE id = $3', [status, admin_id, customerID], (error, result) => {
         if (error) {
             response.status(201).json({
                 success: false
             })
-            console.error(error) 
+            console.error(error)
             return;
         }
         response.status(201).json({
