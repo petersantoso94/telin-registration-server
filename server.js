@@ -132,7 +132,7 @@ const addCustomers = (request, response) => {
             console.error(error)
             return;
         }
-        response.status(201).json({
+        response.status(200).json({
             success: true
         })
     })
@@ -167,12 +167,12 @@ const updateCustomer = (request, response) => {
     })
 }
 app.route('/login').post(login)
+// POST endpoint
+app.route('/customer').post(addCustomers)
 app.use(middleware.checkToken)
 // GET endpoint
 app.route('/customers').get(getCustomers)
 app.route('/customer/:customerID').get(getCustomer).put(updateCustomer)
-// POST endpoint
-app.route('/customer').post(addCustomers)
 
 
 
