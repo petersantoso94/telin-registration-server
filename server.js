@@ -132,7 +132,7 @@ const addCustomers = (request, response) => {
             console.error(error)
             return;
         }
-        response.status(200).json({
+        response.status(201).json({
             success: true
         })
     })
