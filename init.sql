@@ -7,6 +7,7 @@ CREATE TABLE customers (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   phone VARCHAR(255) NOT NULL,
+  country VARCHAR(255),
   nik VARCHAR(20) NOT NULL,
   nokk VARCHAR(20) NOT NULL,
   pktp VARCHAR(255),

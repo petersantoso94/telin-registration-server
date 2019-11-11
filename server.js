@@ -14,7 +14,8 @@ const storage = multer.diskStorage({
         cb(null, path.join(__dirname, "./public/uploads"))
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now())
+        const ext = file.originalname.substring(file.originalname.lastIndexOf(".") + 1, file.originalname.length);
+        cb(null, file.fieldname + '-' + Date.now() + "." + ext)
     }
 })
 const upload = multer({
@@ -23,7 +24,7 @@ const upload = multer({
 
 const app = express()
 
-
+app.use(express.static('public'))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
     extended: true
@@ -139,13 +140,14 @@ const addCustomers = (request, response) => {
     const {
         name,
         phone,
+        country,
         nik,
         nokk,
         status,
         admin_id
     } = request.body
 
-    pool.query('INSERT INTO customers (name, phone, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [name, phone, nik, nokk, pktpFiles, pkkFiles, status, admin_id], (error, result) => {
+    pool.query('INSERT INTO customers (name, phone, country, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', [name, phone, country, nik, nokk, pktpFiles, pkkFiles, status, admin_id], (error, result) => {
         if (error) {
             response.status(201).json({
                 success: false
