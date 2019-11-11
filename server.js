@@ -1,14 +1,28 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const path = require('path')
+const multer = require('multer')
 const {
     pool
 } = require('./config')
 const jwt = require('jsonwebtoken');
 const middleware = require('./middleware');
 const crypto = require('crypto')
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, "./public/uploads"))
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now())
+    }
+})
+const upload = multer({
+    storage: storage
+})
 
 const app = express()
+
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
@@ -111,20 +125,27 @@ const getCustomer = (request, response) => {
     }
     pool.query('SELECT * FROM customers WHERE id = $1', [customerID], responseHandler)
 }
-
+var imgUpload = upload.fields([{
+    name: 'pkk',
+    maxCount: 1
+}, {
+    name: 'pktp',
+    maxCount: 1
+}])
 const addCustomers = (request, response) => {
+    const files = request.files;
+    const pktpFiles = files.pktp ? files.pktp[0].filename : ""
+    const pkkFiles = files.pkk ? files.pkk[0].filename : ""
     const {
         name,
         phone,
         nik,
         nokk,
-        pktp,
-        pkk,
         status,
         admin_id
     } = request.body
 
-    pool.query('INSERT INTO customers (name, phone, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [name, phone, nik, nokk, pktp, pkk, status, admin_id], (error, result) => {
+    pool.query('INSERT INTO customers (name, phone, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [name, phone, nik, nokk, pktpFiles, pkkFiles, status, admin_id], (error, result) => {
         if (error) {
             response.status(201).json({
                 success: false
@@ -168,7 +189,7 @@ const updateCustomer = (request, response) => {
 }
 app.route('/login').post(login)
 // POST endpoint
-app.route('/customer').post(addCustomers)
+app.route('/customer').post(imgUpload, addCustomers)
 app.use(middleware.checkToken)
 // GET endpoint
 app.route('/customers').get(getCustomers)
