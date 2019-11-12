@@ -1,9 +1,11 @@
 version: "3"
 services:
-  telin: 
+  telin:
     image: petersantoso/telin-registration-server-app
-    ports: 
-      - 80:3000
+    ports:
+      - 3000:3000
+    volumes:
+      - ./public:/usr/src/app/public/
     depends_on:
       - db
     environment:
