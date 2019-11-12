@@ -17,6 +17,14 @@ CREATE TABLE customers (
   created_at timestamp default current_timestamp,
   updated_at timestamp default current_timestamp
 );
+CREATE TABLE mappers (
+  id SERIAL PRIMARY KEY,
+  localphone VARCHAR(255) NOT NULL,
+  idphone VARCHAR(255) NOT NULL,
+  admin_id integer REFERENCES admins,
+  created_at timestamp default current_timestamp,
+  updated_at timestamp default current_timestamp
+);
 
 -- admintelin123
 INSERT INTO admins (username, password)
