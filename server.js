@@ -102,7 +102,7 @@ const getCustomers = (request, response) => {
     let customerID = request.params.customerID;
     let responseHandler = (error, results) => {
         if (error) {
-            response.status(201).json({
+            response.status(204).json({
                 success: false
             })
             console.error(error)
@@ -112,11 +112,12 @@ const getCustomers = (request, response) => {
     }
     pool.query('SELECT * FROM customers', responseHandler)
 }
+
 const getCustomer = (request, response) => {
     let customerID = request.params.customerID;
     let responseHandler = (error, results) => {
         if (error) {
-            response.status(201).json({
+            response.status(204).json({
                 success: false
             })
             console.error(error)
@@ -126,13 +127,15 @@ const getCustomer = (request, response) => {
     }
     pool.query('SELECT * FROM customers WHERE id = $1', [customerID], responseHandler)
 }
-var imgUpload = upload.fields([{
+
+const imgUpload = upload.fields([{
     name: 'pkk',
     maxCount: 1
 }, {
     name: 'pktp',
     maxCount: 1
 }])
+
 const addCustomers = (request, response) => {
     const files = request.files;
     const pktpFiles = files.pktp ? files.pktp[0].filename : ""
@@ -149,7 +152,7 @@ const addCustomers = (request, response) => {
 
     pool.query('INSERT INTO customers (name, phone, country, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', [name, phone, country, nik, nokk, pktpFiles, pkkFiles, status, admin_id], (error, result) => {
         if (error) {
-            response.status(201).json({
+            response.status(204).json({
                 success: false
             })
             console.error(error)
@@ -178,7 +181,7 @@ const updateCustomer = (request, response) => {
 
     pool.query('UPDATE customers SET status = $1, admin_id = $2 WHERE id = $3', [status, admin_id, customerID], (error, result) => {
         if (error) {
-            response.status(201).json({
+            response.status(204).json({
                 success: false
             })
             console.error(error)
@@ -189,15 +192,60 @@ const updateCustomer = (request, response) => {
         })
     })
 }
+
+const getMapper = (request, response) => {
+    let localphone = request.params.localphone;
+    let responseHandler = (error, results) => {
+        if (error) {
+            response.status(204).json({
+                success: false
+            })
+            console.error(error)
+            return;
+        }
+        response.status(200).json(results.rows)
+    }
+    pool.query('SELECT idphone FROM mappers WHERE localphone = $1', [localphone], responseHandler)
+}
+
+const updateMapper = (request, response) => {
+    const {
+        localphone,
+        idphone,
+        admin_id
+    } = request.body
+
+    if (!localphone || !idphone || !admin_id) {
+        response.status(400).json({
+            success: false,
+            message: 'Update failed! Missing params'
+        })
+        return;
+    }
+
+    pool.query('INSERT INTO mappers (localphone, idphone, admin_id) SELECT * FROM UNNEST ($1::text[], $2::text[], $3::int[]) ON CONFLICT (idphone) DO NOTHING', [localphone, idphone, admin_id], (error, result) => {
+        if (error) {
+            response.status(204).json({
+                success: false
+            })
+            console.error(error)
+            return;
+        }
+        response.status(201).json({
+            success: true
+        })
+    })
+}
+
 app.route('/login').post(login)
-// POST endpoint
 app.route('/customer').post(imgUpload, addCustomers)
+
+//Admin section
 app.use(middleware.checkToken)
-// GET endpoint
 app.route('/customers').get(getCustomers)
 app.route('/customer/:customerID').get(getCustomer).put(updateCustomer)
-
-
+app.route('/mapper/:localphone').get(getMapper)
+app.route('/mapper').post(updateMapper)
 
 // Start server
 app.listen(process.env.PORT || 3002, () => {

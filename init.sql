@@ -20,7 +20,7 @@ CREATE TABLE customers (
 CREATE TABLE mappers (
   id SERIAL PRIMARY KEY,
   localphone VARCHAR(255) NOT NULL,
-  idphone VARCHAR(255) NOT NULL,
+  idphone VARCHAR(255) NOT NULL UNIQUE,
   admin_id integer REFERENCES admins,
   created_at timestamp default current_timestamp,
   updated_at timestamp default current_timestamp
