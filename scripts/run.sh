@@ -1,1 +1,1 @@
-docker-compose down && docker-compose build --pull && docker-compose up -d
+docker-compose down && docker image rm petersantoso/telin-registration-server-app && docker-compose build --pull && docker-compose up -d
