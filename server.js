@@ -25,10 +25,13 @@ const upload = multer({
 const app = express()
 
 app.use(express.static('public'))
-app.use(bodyParser.json())
+app.use(bodyParser.json({
+    limit: '50mb'
+}));
 app.use(bodyParser.urlencoded({
+    limit: '50mb',
     extended: true
-}))
+}));
 app.use(cors())
 
 const login = (req, res) => {
@@ -223,7 +226,7 @@ const updateMapper = (request, response) => {
         return;
     }
 
-    pool.query('INSERT INTO mappers (localphone, idphone, admin_id) SELECT * FROM UNNEST ($1::text[], $2::text[], $3::int[]) ON CONFLICT (idphone) DO NOTHING', [localphone, idphone, admin_id], (error, result) => {
+    pool.query('INSERT INTO mappers (localphone, idphone, admin_id) SELECT * FROM UNNEST ($1::text[], $2::text[], $3::int[]) ON CONFLICT (idphone) DO UPDATE SET localphone = EXCLUDED.localphone', [localphone, idphone, admin_id], (error, result) => {
         if (error) {
             response.status(204).json({
                 success: false

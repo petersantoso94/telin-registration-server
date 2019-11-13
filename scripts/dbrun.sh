@@ -1,0 +1,1 @@
+docker-compose down && docker volume rm telin-registration-server_my_dbdata && docker-compose up -d
