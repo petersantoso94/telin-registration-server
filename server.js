@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const ext = file.originalname.substring(file.originalname.lastIndexOf(".") + 1, file.originalname.length);
-        cb(null, file.fieldname + '-' + Date.now() + "." + ext)
+        cb(null, file.fieldname + '-' + Date.now() + "." + (ext === 'blob' ? "png" : ext))
     }
 })
 const upload = multer({
@@ -23,6 +23,8 @@ const upload = multer({
 })
 
 const app = express()
+
+app.use(cors())
 
 app.use(express.static('public'))
 app.use(bodyParser.json({
@@ -32,7 +34,6 @@ app.use(bodyParser.urlencoded({
     limit: '50mb',
     extended: true
 }));
-app.use(cors())
 
 const login = (req, res) => {
     let username = req.body.username;
@@ -137,12 +138,16 @@ const imgUpload = upload.fields([{
 }, {
     name: 'pktp',
     maxCount: 1
+}, {
+    name: 'psign',
+    maxCount: 1
 }])
 
 const addCustomers = (request, response) => {
     const files = request.files;
     const pktpFiles = files.pktp ? files.pktp[0].filename : ""
     const pkkFiles = files.pkk ? files.pkk[0].filename : ""
+    const psignFiles = files.psign ? files.psign[0].filename : ""
     const {
         name,
         phone,
@@ -153,7 +158,14 @@ const addCustomers = (request, response) => {
         admin_id
     } = request.body
 
-    pool.query('INSERT INTO customers (name, phone, country, nik, nokk, pktp, pkk, status, admin_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)', [name, phone, country, nik, nokk, pktpFiles, pkkFiles, status, admin_id], (error, result) => {
+    if (!name || !phone || !nik || !nokk || !status || !pkkFiles || !psignFiles) {
+        response.status(400).json({
+            success: false,
+            message: "missing required parameters"
+        })
+    }
+
+    pool.query('INSERT INTO customers (name, phone, country, nik, nokk, pktp, pkk, status, admin_id, psign) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [name, phone, country, nik, nokk, pktpFiles, pkkFiles, status, admin_id, psignFiles], (error, result) => {
         if (error) {
             response.status(204).json({
                 success: false
