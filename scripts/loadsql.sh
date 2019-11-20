@@ -1,0 +1,1 @@
+docker cp ../sql/$1.sql my_postgres:/tmp/$1.sql && docker exec my_postgres psql telin telin -f /tmp/$1.sql

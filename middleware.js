@@ -22,6 +22,7 @@ let checkToken = (req, res, next) => {
         });
       } else {
         req.decoded = decoded;
+        res.locals.decoded = decoded;
         next();
       }
     });

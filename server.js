@@ -70,7 +70,8 @@ const login = (req, res) => {
             password = crypto.createHash('md5').update(password).digest("hex")
             if (username === mockedUsername && password === mockedPassword) {
                 let token = jwt.sign({
-                        username: username
+                        username: username,
+                        country: result.rows[0].country
                     },
                     process.env.JWT_SECRET, {
                         expiresIn: '24h' // expires in 24 hours
@@ -103,7 +104,7 @@ const login = (req, res) => {
 };
 
 const getCustomers = (request, response) => {
-    let customerID = request.params.customerID;
+    let admin_country = response.locals.decoded.country;
     let responseHandler = (error, results) => {
         if (error) {
             response.status(204).json({
@@ -114,7 +115,12 @@ const getCustomers = (request, response) => {
         }
         response.status(200).json(results.rows)
     }
-    pool.query('SELECT * FROM customers', responseHandler)
+    if (admin_country === "All") {
+        // superadmin
+        pool.query("SELECT * FROM customers", responseHandler)
+    } else {
+        pool.query("SELECT * FROM customers WHERE country = $1", [admin_country], responseHandler)
+    }
 }
 
 const getCustomer = (request, response) => {
