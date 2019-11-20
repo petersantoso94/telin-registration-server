@@ -7,7 +7,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - /var/lib/regdata:/usr/src/app/public/
+      - ./public:/usr/src/app/public/
     depends_on:
       - db
     environment:
