@@ -118,6 +118,11 @@ const getCustomers = (request, response) => {
     if (admin_country === "All") {
         // superadmin
         pool.query("SELECT * FROM customers", responseHandler)
+    } else if (admin_country === "Apps") {
+        // admin apps
+        let countryList = ['Hongkong', 'Malaysia', 'Taiwan']
+        pool.query("SELECT * FROM customers WHERE NOT country = ANY($1::text[])", [countryList], responseHandler)
+
     } else {
         pool.query("SELECT * FROM customers WHERE country = $1", [admin_country], responseHandler)
     }
@@ -230,6 +235,13 @@ const getMapper = (request, response) => {
 }
 
 const updateMapper = (request, response) => {
+    let admin_country = response.locals.decoded.country;
+    if (admin_country !== "All") {
+        return response.status(401).json({
+            success: false,
+            message: 'Token is not valid'
+        })
+    }
     const {
         localphone,
         idphone,
