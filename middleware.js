@@ -29,6 +29,18 @@ let checkToken = (req, res, next) => {
   }
 };
 
+let checkSuperadmin = (req, res, next) => {
+  let admin_country = res.locals.decoded.country;
+  if (admin_country !== "All") {
+    return res.status(401).json({
+      success: false,
+      message: 'Token is not valid'
+    })
+  }
+  next()
+}
+
 module.exports = {
-  checkToken: checkToken
+  checkToken: checkToken,
+  checkSuperadmin: checkSuperadmin
 }

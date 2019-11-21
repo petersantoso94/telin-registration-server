@@ -128,6 +128,76 @@ const getCustomers = (request, response) => {
     }
 }
 
+const getAdmins = (request, response) => {
+
+    let responseHandler = (error, results) => {
+        if (error) {
+            response.status(204).json({
+                success: false
+            })
+            console.error(error)
+            return;
+        }
+        response.status(200).json(results.rows)
+    }
+    pool.query("SELECT * FROM admins", responseHandler)
+}
+
+const updateAdmin = (request, response) => {
+    let adminID = request.params.adminID;
+    const {
+        country
+    } = request.body
+
+    if (!country) {
+        response.status(400).json({
+            success: false,
+            message: 'Update failed! Missing params'
+        })
+        return;
+    }
+
+    pool.query('UPDATE admins SET country = $1 WHERE id = $2', [country, adminID], (error, result) => {
+        if (error) {
+            response.status(204).json({
+                success: false
+            })
+            console.error(error)
+            return;
+        }
+        response.status(201).json({
+            success: true
+        })
+    })
+}
+
+const addAdmin = (request, response) => {
+    const {
+        username,
+        password,
+        country
+    } = request.body
+
+    if (!username || !password || !country) {
+        response.status(400).json({
+            success: false,
+            message: "missing required parameters"
+        })
+    }
+    pool.query('INSERT INTO admins (username, password, country) VALUES ($1, $2, $3)', [username, password, country], (error, result) => {
+        if (error) {
+            response.status(204).json({
+                success: false
+            })
+            console.error(error)
+            return;
+        }
+        response.status(201).json({
+            success: true
+        })
+    })
+}
+
 const getCustomer = (request, response) => {
     let customerID = request.params.customerID;
     let responseHandler = (error, results) => {
@@ -235,13 +305,6 @@ const getMapper = (request, response) => {
 }
 
 const updateMapper = (request, response) => {
-    let admin_country = response.locals.decoded.country;
-    if (admin_country !== "All") {
-        return response.status(401).json({
-            success: false,
-            message: 'Token is not valid'
-        })
-    }
     const {
         localphone,
         idphone,
@@ -275,10 +338,13 @@ app.route('/customer').post(imgUpload, addCustomers)
 
 //Admin section
 app.use(middleware.checkToken)
+app.route('/admins').get(middleware.checkSuperadmin, getAdmins)
+app.route('/admin').post(middleware.checkSuperadmin, addAdmin)
+app.route('/admin/:adminID').patch(middleware.checkSuperadmin, updateAdmin)
 app.route('/customers').get(getCustomers)
 app.route('/customer/:customerID').get(getCustomer).put(updateCustomer)
 app.route('/mapper/:localphone').get(getMapper)
-app.route('/mapper').post(updateMapper)
+app.route('/mapper').post(middleware.checkSuperadmin, updateMapper)
 
 // Start server
 app.listen(process.env.PORT || 3002, () => {

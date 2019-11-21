@@ -1,7 +1,8 @@
 CREATE TABLE admins (
   id SERIAL PRIMARY KEY,
   username VARCHAR(255) NOT NULL,
-  password VARCHAR(255) NOT NULL
+  password VARCHAR(255) NOT NULL,
+  country VARCHAR(255) NOT NULL
 );
 CREATE TABLE customers (
   id SERIAL PRIMARY KEY,
@@ -27,6 +28,5 @@ CREATE TABLE mappers (
   updated_at timestamp default current_timestamp
 );
 
--- admintelin123
-INSERT INTO admins (username, password)
-VALUES  ('admintelin', '04813afdadc13165a1ba4d75fec182e0'); 
+INSERT INTO admins (username, password, country)
+VALUES  ('admintelin', '1bea0074d6f1381fd13269565d91a344','All'); 
