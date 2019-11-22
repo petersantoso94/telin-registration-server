@@ -206,17 +206,30 @@ const addAdmin = (request, response) => {
             message: "missing required parameters"
         })
     }
-    pool.query('INSERT INTO admins (username, password, country, admin_id, deleted) VALUES ($1, $2, $3, $4, 0)', [username, password, country, admin_id], (error, result) => {
-        if (error) {
-            console.error(error)
-            return response.status(204).json({
-                success: false
+
+    // check if username exist
+    pool.query('SELECT * FROM admins WHERE username = $1 AND deleted = 0', [username])
+        .then((result) => {
+            if (result.rows.length > 0) {
+                return response.status(409).json({
+                    success: false,
+                    message: 'Username already exist!'
+                });
+            }
+            pool.query('INSERT INTO admins (username, password, country, admin_id, deleted) VALUES ($1, $2, $3, $4, 0)', [username, password, country, admin_id], (error, result) => {
+                if (error) {
+                    console.error(error)
+                    return response.status(204).json({
+                        success: false
+                    })
+                }
+                response.status(201).json({
+                    success: true
+                })
             })
-        }
-        response.status(201).json({
-            success: true
         })
-    })
+
+
 }
 
 const getCustomer = (request, response) => {
