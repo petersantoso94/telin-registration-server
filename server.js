@@ -40,28 +40,25 @@ const login = (req, res) => {
     let password = req.body.password;
 
     if (!username || !password) {
-        res.status(400).json({
+        return res.status(400).json({
             success: false,
             message: 'Authentication failed! Please check the request'
         });
-        return;
     }
     // For the given username fetch user from DB
     pool.query('SELECT * FROM admins WHERE username = $1 AND deleted = 0', [username])
         .then((result) => {
             if (!result) {
-                res.status(403).json({
+                return res.status(403).json({
                     success: false,
                     message: 'Incorrect username or password'
                 });
-                return;
             }
             if (result.rows.length === 0) {
-                res.status(403).json({
+                return res.status(403).json({
                     success: false,
                     message: 'Incorrect username or password'
                 });
-                return;
             }
             let admin_id = result.rows[0].id
 
@@ -107,11 +104,10 @@ const getCustomers = (request, response) => {
     let admin_country = response.locals.decoded.country;
     let responseHandler = (error, results) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(200).json(results.rows)
     }
@@ -132,11 +128,10 @@ const getAdmins = (request, response) => {
 
     let responseHandler = (error, results) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(200).json(results.rows)
     }
@@ -151,20 +146,45 @@ const updateAdmin = (request, response) => {
     } = request.body
 
     if (!country || !admin_id) {
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Update failed! Missing params'
         })
-        return;
     }
 
     pool.query('UPDATE admins SET country = $1, admin_id = $2, updated_at = now() WHERE id = $3', [country, admin_id, adminID], (error, result) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
+        }
+        response.status(201).json({
+            success: true
+        })
+    })
+}
+
+
+const deleteAdmin = (request, response) => {
+    let adminID = request.params.adminID;
+    const {
+        admin_id
+    } = request.body
+
+    if (!admin_id) {
+        return response.status(400).json({
+            success: false,
+            message: 'Update failed! Missing params'
+        })
+    }
+
+    pool.query('UPDATE admins SET deleted = 1, admin_id = $1, updated_at = now() WHERE id = $2', [admin_id, adminID], (error, result) => {
+        if (error) {
             console.error(error)
-            return;
+            return response.status(204).json({
+                success: false
+            })
         }
         response.status(201).json({
             success: true
@@ -181,18 +201,17 @@ const addAdmin = (request, response) => {
     } = request.body
 
     if (!username || !password || !country) {
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: "missing required parameters"
         })
     }
     pool.query('INSERT INTO admins (username, password, country, admin_id, deleted) VALUES ($1, $2, $3, $4, 0)', [username, password, country, admin_id], (error, result) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(201).json({
             success: true
@@ -204,11 +223,10 @@ const getCustomer = (request, response) => {
     let customerID = request.params.customerID;
     let responseHandler = (error, results) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(200).json(results.rows)
     }
@@ -242,7 +260,7 @@ const addCustomers = (request, response) => {
     } = request.body
 
     if (!name || !phone || !nik || !nokk || !status || !pkkFiles || !psignFiles) {
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: "missing required parameters"
         })
@@ -250,11 +268,10 @@ const addCustomers = (request, response) => {
 
     pool.query('INSERT INTO customers (name, phone, country, nik, nokk, pktp, pkk, status, admin_id, psign) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [name, phone, country, nik, nokk, pktpFiles, pkkFiles, status, admin_id, psignFiles], (error, result) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(201).json({
             success: true
@@ -270,20 +287,18 @@ const updateCustomer = (request, response) => {
     } = request.body
 
     if (!status || !admin_id) {
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Update failed! Missing params'
         })
-        return;
     }
 
     pool.query('UPDATE customers SET status = $1, admin_id = $2, updated_at = now() WHERE id = $3', [status, admin_id, customerID], (error, result) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(201).json({
             success: true
@@ -295,11 +310,10 @@ const getMapper = (request, response) => {
     let localphone = request.params.localphone;
     let responseHandler = (error, results) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(200).json(results.rows)
     }
@@ -314,20 +328,18 @@ const updateMapper = (request, response) => {
     } = request.body
 
     if (!localphone || !idphone || !admin_id) {
-        response.status(400).json({
+        return response.status(400).json({
             success: false,
             message: 'Update failed! Missing params'
         })
-        return;
     }
 
     pool.query('INSERT INTO mappers (localphone, idphone, admin_id) SELECT * FROM UNNEST ($1::text[], $2::text[], $3::int[]) ON CONFLICT (idphone) DO UPDATE SET localphone = EXCLUDED.localphone', [localphone, idphone, admin_id], (error, result) => {
         if (error) {
-            response.status(204).json({
+            console.error(error)
+            return response.status(204).json({
                 success: false
             })
-            console.error(error)
-            return;
         }
         response.status(201).json({
             success: true
@@ -342,7 +354,7 @@ app.route('/customer').post(imgUpload, addCustomers)
 app.use(middleware.checkToken)
 app.route('/admins').get(middleware.checkSuperadmin, getAdmins)
 app.route('/admin').post(middleware.checkSuperadmin, addAdmin)
-app.route('/admin/:adminID').patch(middleware.checkSuperadmin, updateAdmin)
+app.route('/admin/:adminID').patch(middleware.checkSuperadmin, updateAdmin).delete(middleware.checkSuperadmin, deleteAdmin)
 app.route('/customers').get(getCustomers)
 app.route('/customer/:customerID').get(getCustomer).put(updateCustomer)
 app.route('/mapper/:localphone').get(getMapper)

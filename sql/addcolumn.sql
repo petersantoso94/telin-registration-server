@@ -1,6 +1,6 @@
-ALTER TABLE admins 
-ADD COLUMN admin_id VARCHAR(255), ADD COLUMN created_at timestamp default current_timestamp,
- ADD COLUMN updated_at timestamp default current_timestamp, ADD COLUMN deleted smallint default 0;
+-- ALTER TABLE admins 
+-- ADD COLUMN admin_id VARCHAR(255), ADD COLUMN created_at timestamp default current_timestamp,
+--  ADD COLUMN updated_at timestamp default current_timestamp, ADD COLUMN deleted smallint default 0;
 
 -- UPDATE admins SET password = '1bea0074d6f1381fd13269565d91a344' WHERE id = 1;
 
