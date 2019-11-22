@@ -2,7 +2,11 @@ CREATE TABLE admins (
   id SERIAL PRIMARY KEY,
   username VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
-  country VARCHAR(255) NOT NULL
+  country VARCHAR(255) NOT NULL,
+  admin_id VARCHAR(255),
+  created_at timestamp default current_timestamp,
+  updated_at timestamp default current_timestamp,
+  deleted smallint default 0
 );
 CREATE TABLE customers (
   id SERIAL PRIMARY KEY,

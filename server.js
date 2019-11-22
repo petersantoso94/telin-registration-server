@@ -47,7 +47,7 @@ const login = (req, res) => {
         return;
     }
     // For the given username fetch user from DB
-    pool.query('SELECT * FROM admins WHERE username = $1', [username])
+    pool.query('SELECT * FROM admins WHERE username = $1 AND deleted = 0', [username])
         .then((result) => {
             if (!result) {
                 res.status(403).json({
@@ -140,16 +140,17 @@ const getAdmins = (request, response) => {
         }
         response.status(200).json(results.rows)
     }
-    pool.query("SELECT * FROM admins", responseHandler)
+    pool.query("SELECT * FROM admins WHERE deleted = 0", responseHandler)
 }
 
 const updateAdmin = (request, response) => {
     let adminID = request.params.adminID;
     const {
-        country
+        country,
+        admin_id
     } = request.body
 
-    if (!country) {
+    if (!country || !admin_id) {
         response.status(400).json({
             success: false,
             message: 'Update failed! Missing params'
@@ -157,7 +158,7 @@ const updateAdmin = (request, response) => {
         return;
     }
 
-    pool.query('UPDATE admins SET country = $1 WHERE id = $2', [country, adminID], (error, result) => {
+    pool.query('UPDATE admins SET country = $1, admin_id = $2, updated_at = now() WHERE id = $3', [country, admin_id, adminID], (error, result) => {
         if (error) {
             response.status(204).json({
                 success: false
@@ -175,7 +176,8 @@ const addAdmin = (request, response) => {
     const {
         username,
         password,
-        country
+        country,
+        admin_id
     } = request.body
 
     if (!username || !password || !country) {
@@ -184,7 +186,7 @@ const addAdmin = (request, response) => {
             message: "missing required parameters"
         })
     }
-    pool.query('INSERT INTO admins (username, password, country) VALUES ($1, $2, $3)', [username, password, country], (error, result) => {
+    pool.query('INSERT INTO admins (username, password, country, admin_id, deleted) VALUES ($1, $2, $3, $4, 0)', [username, password, country, admin_id], (error, result) => {
         if (error) {
             response.status(204).json({
                 success: false
@@ -275,7 +277,7 @@ const updateCustomer = (request, response) => {
         return;
     }
 
-    pool.query('UPDATE customers SET status = $1, admin_id = $2 WHERE id = $3', [status, admin_id, customerID], (error, result) => {
+    pool.query('UPDATE customers SET status = $1, admin_id = $2, updated_at = now() WHERE id = $3', [status, admin_id, customerID], (error, result) => {
         if (error) {
             response.status(204).json({
                 success: false
